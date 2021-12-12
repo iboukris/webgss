@@ -1,0 +1,77 @@
+From 679fa83791c25c43014da65eea842a374ccd28de Mon Sep 17 00:00:00 2001
+From: Isaac Boukris <iboukris@gmail.com>
+Date: Thu, 30 Dec 2021 17:26:17 +0200
+Subject: [PATCH 1/2] TEMP: patch SUBDIRS to only include a subset
+
+---
+ src/Makefile.in | 27 +--------------------------
+ 1 file changed, 1 insertion(+), 26 deletions(-)
+
+diff --git a/src/Makefile.in b/src/Makefile.in
+index 8f14e9bf2..31272f45e 100644
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -6,32 +6,7 @@ mydir=.
+ #	plugins/locate/python
+ #	plugins/preauth/wpse
+ #	plugins/preauth/cksum_body
+-SUBDIRS=util include lib \
+-	@sam2_plugin@ \
+-	plugins/audit \
+-	plugins/audit/test \
+-	@audit_plugin@ \
+-	plugins/kadm5_hook/test \
+-	plugins/kadm5_auth/test \
+-	plugins/gssapi/negoextest \
+-	plugins/hostrealm/test \
+-	plugins/localauth/test \
+-	plugins/pwqual/test \
+-	plugins/authdata/greet_server \
+-	plugins/authdata/greet_client \
+-	plugins/certauth/test \
+-	plugins/kdb/db2 \
+-	@ldap_plugin_dir@ \
+-	@lmdb_plugin_dir@ \
+-	plugins/kdb/test \
+-	plugins/kdcpolicy/test \
+-	plugins/preauth/otp \
+-	plugins/preauth/pkinit \
+-	plugins/preauth/spake \
+-	plugins/preauth/test \
+-	plugins/tls/k5tls \
+-	kdc kadmin kprop clients appl tests \
+-	config-files build-tools man doc @po@
++SUBDIRS=util include lib
+ WINSUBDIRS=include util lib ccapi windows clients appl plugins\preauth\spake
+ BUILDTOP=$(REL).
+ 
+-- 
+2.31.1
+
+
+From c424c2f7c1121ee646588e091dc3f4e0f7d75378 Mon Sep 17 00:00:00 2001
+From: Isaac Boukris <iboukris@gmail.com>
+Date: Thu, 30 Dec 2021 17:32:56 +0200
+Subject: [PATCH 2/2] TEMP: force gmtime over gmtime_r
+
+https://github.com/emscripten-core/emscripten/issues/15861
+---
+ src/lib/krb5/asn.1/asn1_encode.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/lib/krb5/asn.1/asn1_encode.c b/src/lib/krb5/asn.1/asn1_encode.c
+index c4140021e..22072905c 100644
+--- a/src/lib/krb5/asn.1/asn1_encode.c
++++ b/src/lib/krb5/asn.1/asn1_encode.c
+@@ -127,7 +127,7 @@ k5_asn1_encode_generaltime(asn1buf *buf, time_t val)
+          * Sanity check this just to be paranoid, as gmtime can return NULL,
+          * and some bogus implementations might overrun on the sprintf.
+          */
+-#ifdef HAVE_GMTIME_R
++#ifdef HAVE_GMTIME_R_NOPE
+ #ifdef GMTIME_R_RETURNS_INT
+         if (gmtime_r(&gmt_time, &gtimebuf) != 0)
+             return ASN1_BAD_GMTIME;
+-- 
+2.31.1
+

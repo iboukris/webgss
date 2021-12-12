@@ -1,0 +1,42 @@
+{
+  "name": "webgss",
+  "version": "0.0.8",
+  "description": "GSS-API and Kerberos authentication for the web.",
+  "main": "webgss.js",
+  "scripts": {
+    "test": "make check"
+  },
+  "dependencies": {
+    "node-fetch": "^3.0.0"
+  },
+  "files": [
+    "webgss.js",
+    "lib/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iboukris/webgss.git"
+  },
+  "keywords": [
+    "gssapi",
+    "spnego",
+    "kerberos",
+    "krb5",
+    "http",
+    "negotiate",
+    "authentication",
+    "webassembly",
+    "async",
+    "fetch",
+    "xhr"
+  ],
+  "author": {
+    "name": "Isaac Boukris",
+    "email": "iboukris@gmail.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/iboukris/webgss/issues"
+  },
+  "homepage": "https://github.com/iboukris/webgss"
+}

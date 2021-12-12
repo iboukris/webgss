@@ -1,0 +1,56 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  # workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    strategy:
+        matrix:
+            name: [ debug, release ]
+            include:
+                - name: debug
+                  make_target: debug
+                - name: release
+                  make_target: all
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Setup Emscripten toolchain
+        uses: mymindstorm/setup-emsdk@v11
+
+      - name: Install deps
+        env:
+          DEBIAN_FRONTEND : noninteractive
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y python3-gssapi python3-kdcproxy krb5-user krb5-kdc krb5-admin-server
+
+      - name: Build and test
+        env:
+          MKTARGET: ${{ matrix.make_target }}
+        run: |
+          make -j $MKTARGET
+          npm install
+          make check

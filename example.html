@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<script src="webgss.js"></script>
+
+<script>
+async function getAuthResource(user, pwd)
+{
+    webgss.setKrb5Trace();
+
+    let client = await webgss.gssClient('../KdcProxy', user, pwd);
+
+    let reply = await client.fetch('../hello');
+
+    let text = await reply.text();
+
+    return text;
+}
+
+function auth () {
+    let form =  document.getElementById('login-form');
+    let user = form.uname.value;
+    let pwd = form.pwd.value;
+
+    form.reset();
+
+    getAuthResource(user, pwd).then(text => {
+        document.body.textContent = text;
+    });
+}
+</script>
+
+
+<form id='login-form' autocomplete="off">
+
+    <label for="uname"><b>Username</b></label> <br>
+    <input type="text" placeholder="Enter Username" name="uname" required> <br>
+
+    <label for="pwd"><b>Password</b></label> <br>
+    <input type="password" placeholder="Enter Password" name="pwd" required> <br>
+
+    <input type="button" value="Login" onclick="auth();">
+
+</form>
+
+</body>
+</html>
+

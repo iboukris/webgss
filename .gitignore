@@ -1,0 +1,9 @@
+testdir_wgss/
+node_modules/
+krb5/*
+lib/
+lib_emwrap.a
+emwrap.o
+k5lib.o
+utils.o
+package-lock.json
