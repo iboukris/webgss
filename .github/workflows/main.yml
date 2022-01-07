@@ -37,15 +37,21 @@ jobs:
         with:
           submodules: true
 
-      - name: Setup Emscripten toolchain
-        uses: mymindstorm/setup-emsdk@v11
-
       - name: Install deps
         env:
           DEBIAN_FRONTEND : noninteractive
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y python3-gssapi python3-kdcproxy krb5-user krb5-kdc krb5-admin-server
+
+      - name: Setup Emscripten toolchain
+        uses: mymindstorm/setup-emsdk@v11
+        with:
+          version: 3.1.0
+          actions-cache-folder: 'emsdk-cache'
+
+      - name: Verify emsdk
+        run: emcc -v
 
       - name: Build and test
         env:
