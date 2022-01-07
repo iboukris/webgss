@@ -1,3 +1,6 @@
+// MIT Licensed, see LICENSE file
+// Copyright (c) 2021 Isaac Boukris <iboukris@gmail.com>
+
 #ifndef K5DRV_H_INCLUDED
 #define K5DRV_H_INCLUDED
 
