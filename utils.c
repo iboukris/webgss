@@ -10,18 +10,6 @@
 
 gss_OID_desc mech_spnego = { 6, "\053\006\001\005\005\002" };
 
-void
-print_hex(gss_buffer_t buf)
-{
-    size_t i;
-    const unsigned char *bytes = buf->value;
-
-    for (i = 0; i < buf->length; i++)
-        printf("%02X", bytes[i]);
-    printf("\n");
-}
-
-
 unsigned int
 load_32_be (const void *cvp)
 {
