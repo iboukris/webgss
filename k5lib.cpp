@@ -331,17 +331,16 @@ struct gssCredsHandle : k5libHandle
         OM_uint32 ret_flags = 0, flags = GSS_C_MUTUAL_FLAG;
         gss_buffer_desc token = {};
         gss_buffer_desc out = {};
+        vector<uint8_t> data;
 
         emscripten::val obj = emscripten::val::object();
 
         obj.set("status", "error");
 
-        char data[msg.length()];
-
         if (!msg.empty()) {
-	    token.value = data;
-            memcpy(token.value, msg.c_str(), msg.length());
-            token.length = msg.length();
+            data.assign(msg.begin(), msg.end());
+            token.value = data.data();
+            token.length = data.size();
         }
 
         major = gss_init_sec_context(&minor, gss_creds, &gss_ctx, target_name,
