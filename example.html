@@ -2,9 +2,10 @@
 <html>
 <body>
 
-<script src="webgss.js"></script>
+<script type='module'>
 
-<script>
+import webgss from './lib/webgss.js';
+
 async function getAuthResource(user, pwd)
 {
     webgss.setKrb5Trace();
@@ -18,7 +19,8 @@ async function getAuthResource(user, pwd)
     return text;
 }
 
-function auth () {
+
+function auth() {
     let form =  document.getElementById('login-form');
     let user = form.uname.value;
     let pwd = form.pwd.value;
@@ -29,10 +31,15 @@ function auth () {
         document.body.textContent = text;
     });
 }
+
+let button = document.getElementById('button');
+
+button.addEventListener('click', auth);
+
 </script>
 
 
-<form id='login-form' autocomplete="off">
+<form id="login-form" autocomplete="off">
 
     <label for="uname"><b>Username</b></label> <br>
     <input type="text" placeholder="Enter Username" name="uname" required> <br>
@@ -40,7 +47,7 @@ function auth () {
     <label for="pwd"><b>Password</b></label> <br>
     <input type="password" placeholder="Enter Password" name="pwd" required> <br>
 
-    <input type="button" value="Login" onclick="auth();">
+    <input type="button" id="button" value="Login">
 
 </form>
 

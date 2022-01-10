@@ -11,6 +11,12 @@ protocol (aka SPNEGO).
 It incorporates the MIT krb5 libraries compiled to JavaScript & WebAssembly using emscripten.
 
 ## Usage
+
+To import in the browser use the ES6 module like this (see example.html):
+`import webgss from './lib/webgss.js';`
+
+For node use the npm package like this: `let webgss = require('webgss');`
+
 ```javascript
 async function kerberizedFetch(url, kdcproxy, user, pwd)
 {

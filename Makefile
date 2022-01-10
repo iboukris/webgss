@@ -24,12 +24,12 @@ EMBEDK5 = --embed-file embed_k5.conf@/etc/krb5.conf
 
 .PHONY: all clean test check debug
 
-all: lib/k5lib.js lib/k5lib_node.js
+all: lib/webgss.js lib/webgss_node.js
 
 debug: DEBUG_OPTIONS = -s SOCKET_DEBUG=1 -s FS_DEBUG=1 -s ASSERTIONS=2 -s ALLOW_MEMORY_GROWTH=1
 debug: SANIT_OPTIONS = -fsanitize=address
 debug: CFLAGS = -g -O0 -Wall
-debug: lib/k5lib_node.js lib/k5lib.js
+debug: lib/k5lib.js lib/k5lib_node.js
 
 
 lib_emwrap.a:
@@ -57,10 +57,18 @@ lib/k5lib.js: krb5/src/lib/libkrb5.a utils.o k5drv.o k5lib.o
 	mkdir -p lib
 	$(CC) $(CFLAGS) --bind utils.o k5drv.o k5lib.o $(K5_LIBS) $(LIBS) $(LDFLAGS) $(WGLDFLAGS) -o lib/k5lib.js -s EXPORT_ES6=1 -s EXPORT_NAME=createEmModule -s ENVIRONMENT=web $(EM_ARGS) $(SANIT_OPTIONS) $(DEBUG_OPTIONS) $(EMBEDK5)
 
+lib/webgss.js: lib/k5lib.js
+	cat webgss.js > lib/webgss.js
+	printf "\nfunction is_node() { return false }\nexport default webgss;\n" >> lib/webgss.js
+
 # node isn't happy with EXPORT_ES6 so let it have its own build for now
 lib/k5lib_node.js: krb5/src/lib/libkrb5.a utils.o k5drv.o k5lib.o
 	mkdir -p lib
 	$(CC) $(CFLAGS) --bind utils.o k5drv.o k5lib.o $(K5_LIBS) $(LIBS) $(LDFLAGS) $(WGLDFLAGS) -o lib/k5lib_node.js -s ENVIRONMENT=node $(EM_ARGS) $(SANIT_OPTIONS) $(DEBUG_OPTIONS) $(EMBEDK5)
+
+lib/webgss_node.js: lib/k5lib_node.js
+	cat webgss.js > lib/webgss_node.js
+	printf "\nfunction is_node() { return true }\nmodule.exports = webgss;\n" >> lib/webgss_node.js
 
 
 test: check
