@@ -2,7 +2,8 @@
   "name": "webgss",
   "version": "0.0.8",
   "description": "GSS-API and Kerberos authentication for the web.",
-  "main": "webgss.js",
+  "main": "lib/webgss_node.js",
+  "browser": "lib/webgss.js",
   "scripts": {
     "test": "make check"
   },
@@ -10,7 +11,6 @@
     "node-fetch": "^3.0.0"
   },
   "files": [
-    "webgss.js",
     "lib/"
   ],
   "repository": {

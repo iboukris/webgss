@@ -1,8 +1,6 @@
 // MIT Licensed, see LICENSE file
 // Copyright (c) 2021 Isaac Boukris <iboukris@gmail.com>
 
-function is_node () { return (typeof module === 'object' && module.exports); }
-
 /* Use webgss.gssClient() to get an instance. */
 class gssClient
 {
@@ -106,11 +104,11 @@ class webgss
             let obj = await import('node-fetch');
             fetch = obj.default;
             req = obj.Request;
-            createEmModule = require('./lib/k5lib_node.js');
+            createEmModule = require('./k5lib_node.js');
         } else {
             fetch = window.fetch.bind(window);
             req = Request;
-            let obj = await import('./lib/k5lib.js');
+            let obj = await import('./k5lib.js');
             createEmModule = obj.default;
         }
 
@@ -159,9 +157,6 @@ class webgss
         return new gssClient(i, kdcproxy, initCreds);
     }
 }
-
-if (is_node())
-    module.exports = webgss;
 
 
 async function sendto_kdc(obj, kproxy, req) {
