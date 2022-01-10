@@ -1,6 +1,6 @@
 {
   "name": "webgss",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "GSS-API and Kerberos authentication for the web.",
   "main": "lib/webgss_node.js",
   "browser": "lib/webgss.js",
