@@ -7,14 +7,16 @@ async function getAuthResource(user, pwd, server)
 
     // Debug
     webgss.setKrb5Trace(true);
+    webgss.leakCheck();
 
     let client = await webgss.gssClient(server + '/KdcProxy', user, pwd);
+    webgss.leakCheck();
 
     let reply = await client.fetch(server + '/hello');
-
     webgss.leakCheck();
 
     let data = await reply.text();
+    webgss.leakCheck();
 
     return data;
 }

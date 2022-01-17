@@ -13,7 +13,7 @@ It incorporates the MIT krb5 libraries compiled to JavaScript & WebAssembly usin
 ## Import
 
 To import in the browser use the ES6 module (see example.html), while for node use the npm
-package with 'require' (curretnly node can't use the ES6 module).
+package with 'require' (using './lib/webgss_node.js', as it can't curretnly use the ES6 module).
 
 ```javascript
 import webgss from './lib/webgss.js';  // browser
@@ -36,16 +36,16 @@ async function kerberizedFetch(url, kdcproxy, user, pwd)
 }
 ```
 
-Note, if the kdcproxy and / or the authenticated application are hosted on a different
-host or port than the JavaScript application, then you'd have to enable CORS on these
-servers, or the browser will likely reject the request.
+Browser use note: if the kdcproxy and / or the authenticated application are hosted on a
+different host or port than the JavaScript application, then you'd have to enable CORS on
+these servers, or the browser will likely reject the request.
 
 ## Installation
 
 `npm install webgss`
 
-The npm package only contains the release build. For debugging, a debug build can be
-made when building from source, as follows.
+The npm package only contains the release build, a debug build can be made when building
+from source, as follows.
 
 To build from source, first make sure that emcc is available, see emscripten's
 instructions on how to install and enable the emsdk, at:
