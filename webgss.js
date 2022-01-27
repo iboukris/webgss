@@ -89,6 +89,19 @@ class gssClient
 }
 
 
+function setKrb5Conf(module, default_realm=null)
+{
+    let conf = '[libdefaults]\n';
+    conf += 'dns_lookup_realm = false\n';
+    conf += 'dns_lookup_kdc = false\n';
+    conf += 'dns_canonicalize_hostname = false\n';
+
+    if (default_realm)
+        conf += ('default_realm = ' + default_realm);
+
+    module.FS.writeFile('/etc/krb5.conf', conf);
+}
+
 class webgss
 {
     static #instance = null;
@@ -116,10 +129,23 @@ class webgss
 
         if (this.#instance != null)
             module = null;
-        else
+        else {
+            module.FS.mkdir('/etc');
+            setKrb5Conf(module);
             this.#instance = { module, fetch, req };
+        }
+
+        // XXX
+        this.i = this.#instance;
 
         return this.#instance;
+    }
+
+    static setDefaultRealm(realm)
+    {
+        this.#getInstance().then(i => {
+            setKrb5Conf(i.module, realm);
+        });
     }
 
     /* Call when there are no async operations running in the background. */
