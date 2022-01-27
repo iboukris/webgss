@@ -1,12 +1,15 @@
 // MIT Licensed, see LICENSE file
 // Copyright (c) 2021 Isaac Boukris <iboukris@gmail.com>
 
-async function getAuthResource(user, pwd, server)
+async function getAuthResource(user, pwd, realm, server)
 {
     let webgss = require('.');
 
     // Debug
     webgss.setKrb5Trace(true);
+    webgss.leakCheck();
+
+    webgss.setDefaultRealm(realm);
     webgss.leakCheck();
 
     let client = await webgss.gssClient(server + '/KdcProxy', user, pwd);
@@ -21,9 +24,10 @@ async function getAuthResource(user, pwd, server)
     return data;
 }
 
-let user = process.env.KUSER + '@' + process.env.KRB5REALM;
+let user = process.env.KUSER;
 let pwd = process.env.KUPWD;
+let realm = process.env.KRB5REALM;
 let srv = 'http://' + process.env.HOSTNAME + ':' + process.env.HTTPDPORT;
 
-getAuthResource(user, pwd, srv).then(data => console.log( data ));
+getAuthResource(user, pwd, realm, srv).then(data => console.log( data ));
 
