@@ -38,7 +38,8 @@ async function kerberizedFetch(url, kdcproxy, user, pwd)
 
 Browser note: if the kdcproxy and / or the authenticated application are hosted on a
 different host or port than the JavaScript application, then you'd have to enable CORS
-on these servers, or the browser will likely reject the request.
+on these servers, or the browser will likely reject the request. For details, see:
+https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 
 ## Installation
 
