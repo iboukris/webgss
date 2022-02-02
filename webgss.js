@@ -189,17 +189,19 @@ async function sendto_kdc(obj, kproxy, req) {
     let init = {
         method: 'POST',
         body: req,
-        //cache: 'no-cache',
-        //redirect: 'error',
         headers: {
             'Content-type': 'application/kerberos'
         }
     }
-    let request = new obj.req(kproxy, init);
-    let response = await obj.fetch(request);
+
+    let response = await obj.fetch(kproxy, init);
+
     if (response.status != 200)
         throw 'KdcProxy request failed';
-    return response;
+
+    let res_data = await response.arrayBuffer();
+
+    return new Uint8Array(res_data);
 }
 
 async function kdc_exchange(obj, kdcproxy, handle)
@@ -212,11 +214,7 @@ async function kdc_exchange(obj, kdcproxy, handle)
 
         let rep = await sendto_kdc(obj, kdcproxy, req);
 
-        let rep_data = await rep.arrayBuffer();
-
-        rep_data = new Uint8Array(rep_data);
-
-        reply = handle.step(rep_data);
+        reply = handle.step(rep);
     }
 
     if (reply.status != 'ok')
