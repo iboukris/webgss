@@ -47,3 +47,118 @@ index 8f14e9bf2..31272f45e 100644
  
 -- 
 2.31.1
+From 518af6af6773b11b2e40351fda564564d93fccf7 Mon Sep 17 00:00:00 2001
+From: Isaac Boukris <iboukris@gmail.com>
+Date: Tue, 8 Feb 2022 00:11:00 +0200
+Subject: [PATCH 1/2] Try kdc_send_hook() before locating the KDC server
+
+---
+ src/lib/krb5/os/sendto_kdc.c | 36 ++++++++++++++++++------------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
+
+diff --git a/src/lib/krb5/os/sendto_kdc.c b/src/lib/krb5/os/sendto_kdc.c
+index 8620ffa45..dc29619db 100644
+--- a/src/lib/krb5/os/sendto_kdc.c
++++ b/src/lib/krb5/os/sendto_kdc.c
+@@ -440,7 +440,7 @@ krb5_sendto_kdc(krb5_context context, const krb5_data *message,
+                 int no_udp)
+ {
+     krb5_error_code retval, oldret, err;
+-    struct serverlist servers;
++    struct serverlist servers = {};
+     int server_used;
+     k5_transport_strategy strategy;
+     krb5_data reply = empty_data(), *hook_message = NULL, *hook_reply = NULL;
+@@ -462,6 +462,23 @@ krb5_sendto_kdc(krb5_context context, const krb5_data *message,
+ 
+     TRACE_SENDTO_KDC(context, message->length, realm, *use_primary, no_udp);
+ 
++    if (context->kdc_send_hook != NULL) {
++        retval = context->kdc_send_hook(context, context->kdc_send_hook_data,
++                                        realm, message, &hook_message,
++                                        &hook_reply);
++        if (retval)
++            goto cleanup;
++
++        if (hook_reply != NULL) {
++            *reply_out = *hook_reply;
++            free(hook_reply);
++            goto cleanup;
++        }
++
++        if (hook_message != NULL)
++            message = hook_message;
++    }
++
+     if (!no_udp && context->udp_pref_limit < 0) {
+         int tmp;
+         retval = profile_get_integer(context->profile,
+@@ -490,23 +507,6 @@ krb5_sendto_kdc(krb5_context context, const krb5_data *message,
+     if (retval)
+         return retval;
+ 
+-    if (context->kdc_send_hook != NULL) {
+-        retval = context->kdc_send_hook(context, context->kdc_send_hook_data,
+-                                        realm, message, &hook_message,
+-                                        &hook_reply);
+-        if (retval)
+-            goto cleanup;
+-
+-        if (hook_reply != NULL) {
+-            *reply_out = *hook_reply;
+-            free(hook_reply);
+-            goto cleanup;
+-        }
+-
+-        if (hook_message != NULL)
+-            message = hook_message;
+-    }
+-
+     err = 0;
+     retval = k5_sendto(context, message, realm, &servers, strategy, NULL,
+                        &reply, NULL, NULL, &server_used,
+-- 
+2.34.1
+
+
+From 277163bd27d662cf93b2906a23cce1884752fd29 Mon Sep 17 00:00:00 2001
+From: Isaac Boukris <iboukris@gmail.com>
+Date: Mon, 7 Feb 2022 21:18:45 +0200
+Subject: [PATCH 2/2] em_fetch
+
+---
+ src/lib/krb5/krb/init_ctx.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/src/lib/krb5/krb/init_ctx.c b/src/lib/krb5/krb/init_ctx.c
+index 87b486c53..8fe1b23e4 100644
+--- a/src/lib/krb5/krb/init_ctx.c
++++ b/src/lib/krb5/krb/init_ctx.c
+@@ -151,6 +151,12 @@ krb5int_init_context_kdc(krb5_context *context)
+     return krb5_init_context_profile(NULL, KRB5_INIT_CONTEXT_KDC, context);
+ }
+ 
++#ifdef __EMSCRIPTEN__
++
++krb5_pre_send_fn em_send_to_realm_hook = NULL;
++
++#endif
++
+ krb5_error_code KRB5_CALLCONV
+ krb5_init_context_profile(profile_t profile, krb5_flags flags,
+                           krb5_context *context_out)
+@@ -277,6 +283,11 @@ krb5_init_context_profile(profile_t profile, krb5_flags flags,
+     /* It's OK if this fails */
+     (void)profile_get_string(ctx->profile, KRB5_CONF_LIBDEFAULTS,
+                              KRB5_CONF_ERR_FMT, NULL, NULL, &ctx->err_fmt);
++
++#ifdef __EMSCRIPTEN__
++    krb5_set_kdc_send_hook(ctx, em_send_to_realm_hook, NULL);
++#endif
++
+     *context_out = ctx;
+     ctx = NULL;
+ 
+-- 
+2.34.1
+

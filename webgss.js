@@ -11,24 +11,6 @@ class gssClient
         this.creds = initCreds;
     }
 
-    async #prepSecContext(target)
-    {
-        let tktHandle = this.i.module.tktCreds(this.creds, target);
-        let tktCreds;
-
-        if (!tktHandle)
-            throw 'null tktHandle';
-
-        try {
-            tktCreds = await kdc_exchange(this.i, this.kdcp, tktHandle);
-        } finally {
-            tktHandle.delete();
-        }
-
-        /* XXX: this can rece and cause cache misses. */
-        this.creds = tktCreds;
-    }
-
     /* Fetch a resource protected with HTTP Negotiate authentication (SPNEGO). */
     async fetch(resource, init = {})
     {
@@ -42,14 +24,12 @@ class gssClient
 
         let target = 'HTTP/' + hostname + '@';
 
-        await this.#prepSecContext(target);
-
         let gssHandle = this.i.module.gssCreds(this.creds, target);
         if (!gssHandle)
             throw 'null gssHandle';
 
         try {
-            let gssReply = gssHandle.step('');
+            let gssReply = await gssHandle.step('');
 
             while (gssReply.status == 'continue')
             {
@@ -70,7 +50,7 @@ class gssClient
 
                 auth = auth.slice(prefix.length);
                 auth = base64DecToArr(auth);
-                gssReply = gssHandle.step(auth);
+                gssReply = await gssHandle.step(auth);
 
                 if (response.status != 401)
                     break;
@@ -100,6 +80,18 @@ function setKrb5Conf(module, default_realm=null)
         conf += ('default_realm = ' + default_realm);
 
     module.FS.writeFile('/etc/krb5.conf', conf);
+}
+
+async function sendToRealm(obj, req)  {
+    let data = new Uint8Array(req);
+    let reply;
+    try {
+        reply = await sendto_kdc(obj, obj.kdcproxy, data);
+    } catch (error) {
+        console.log(error);
+        reply = new Uint8Array(0);
+    }
+    return reply;
 }
 
 class webgss
@@ -133,6 +125,8 @@ class webgss
             module.FS.mkdir('/etc');
             setKrb5Conf(module);
             this.#instance = { module, fetch, req };
+            module.wgssEnv = this.#instance;
+            module.wgssEnv.sendToRealm = sendToRealm;
         }
 
         // XXX
@@ -160,7 +154,6 @@ class webgss
     {
         this.#getInstance().then(i => {
             i.module.setKrb5Trace(enable);
-            i.module.logReadFiles = true; // XXX
         });
     }
 
@@ -168,18 +161,9 @@ class webgss
     static async gssClient(kdcproxy, user, pwd)
     {
         let i = await this.#getInstance();
-        let initHandle = i.module.initCreds(user, pwd);
-        let initCreds;
-
-        if (!initHandle)
-            throw 'null initHandle';
-
-        try {
-            initCreds = await kdc_exchange(i, kdcproxy, initHandle);
-        } finally {
-            initHandle.delete();
-        }
-
+        i.module.wgssEnv.kdcproxy = kdcproxy;
+        let initCreds = await i.module.acquireCreds(user, pwd);
+        initCreds = new Uint8Array(initCreds);
         return new gssClient(i, kdcproxy, initCreds);
     }
 }
@@ -203,26 +187,6 @@ async function sendto_kdc(obj, kproxy, req) {
 
     return new Uint8Array(res_data);
 }
-
-async function kdc_exchange(obj, kdcproxy, handle)
-{
-    let reply = handle.step('');
-
-    while (reply.status == 'continue') {
-
-        let req = new Uint8Array(reply.token);
-
-        let rep = await sendto_kdc(obj, kdcproxy, req);
-
-        reply = handle.step(rep);
-    }
-
-    if (reply.status != 'ok')
-        throw 'exchange failed';
-
-    return new Uint8Array(reply.creds);
-}
-
 
 
 /*\

@@ -52,12 +52,6 @@ krb5_error_code
 encode_kkdcp_message(krb5_context ctx, std::vector<uint8_t> &in_data,
                      std::vector<uint8_t> &realm, std::string &out_data);
 
-krb5_error_code
-ccache_to_buffer(std::string &ccache, std::string &out_buffer);
-
-krb5_error_code
-buffer_to_ccache(std::string &in_buffer, std::string &ccache);
-
 } // extern "C"
 
 #endif // K5DRV_H_INCLUDED
