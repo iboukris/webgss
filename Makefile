@@ -15,7 +15,7 @@ DEBUG_OPTIONS =
 SANIT_OPTIONS =
 
 K5_CONF = --disable-rpath --disable-thread-support --disable-shared --enable-static
-K5_LIBS = -lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err -lapputils -lkrb5support
+K5_LIBS = -lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err -lkrb5support
 
 # -s STRICT=1 -s EXPORTED_FUNCTIONS=_getenv,_setenv -s EXPORTED_RUNTIME_METHODS=ccall,cwrap
 EM_ARGS = -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=FS
@@ -54,7 +54,7 @@ k5lib.o: krb5/src/lib/libkrb5.a k5lib.cpp
 
 lib/k5lib.js: krb5/src/lib/libkrb5.a utils.o k5drv.o k5lib.o
 	mkdir -p lib
-	$(CC) $(CFLAGS) --bind utils.o k5drv.o k5lib.o $(K5_LIBS) $(LIBS) $(LDFLAGS) $(WGLDFLAGS) -o lib/k5lib.js -s EXPORT_ES6=1 -s EXPORT_NAME=createEmModule -s ENVIRONMENT=web $(EM_ARGS) $(SANIT_OPTIONS) $(DEBUG_OPTIONS)
+	$(CC) $(CFLAGS) --bind utils.o k5drv.o k5lib.o $(K5_LIBS) $(LIBS) $(LDFLAGS) $(WGLDFLAGS) -o lib/k5lib.js -s EXPORT_ES6=1 -s EXPORT_NAME=createEmModule -s ENVIRONMENT=web $(EM_ARGS) $(SANIT_OPTIONS) $(DEBUG_OPTIONS) -s ASYNCIFY=1 -s ASYNCIFY_STACK_SIZE=8192
 
 lib/webgss.js: lib/k5lib.js
 	cat webgss.js > lib/webgss.js
@@ -63,7 +63,7 @@ lib/webgss.js: lib/k5lib.js
 # node isn't happy with EXPORT_ES6 so let it have its own build for now
 lib/k5lib_node.js: krb5/src/lib/libkrb5.a utils.o k5drv.o k5lib.o
 	mkdir -p lib
-	$(CC) $(CFLAGS) --bind utils.o k5drv.o k5lib.o $(K5_LIBS) $(LIBS) $(LDFLAGS) $(WGLDFLAGS) -o lib/k5lib_node.js -s ENVIRONMENT=node $(EM_ARGS) $(SANIT_OPTIONS) $(DEBUG_OPTIONS)
+	$(CC) $(CFLAGS) --bind utils.o k5drv.o k5lib.o $(K5_LIBS) $(LIBS) $(LDFLAGS) $(WGLDFLAGS) -o lib/k5lib_node.js -s ENVIRONMENT=node $(EM_ARGS) $(SANIT_OPTIONS) $(DEBUG_OPTIONS) -s ASYNCIFY=1 -s ASYNCIFY_STACK_SIZE=8192
 
 lib/webgss_node.js: lib/k5lib_node.js
 	cat webgss.js > lib/webgss_node.js
@@ -78,5 +78,5 @@ check: all
 
 clean:
 	rm -rf utils.o k5drv.o k5lib.o lib testdir_wgss
-	cd krb5/src && emmake $(MAKE) clean
-	rm -f emwrap.o lib_emwrap.a
+	# cd krb5/src && emmake $(MAKE) clean
+	# rm -f emwrap.o lib_emwrap.a
